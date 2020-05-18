@@ -28,7 +28,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_margin="20dp" />
+        android:layout_margin="20dp"
+        android:src="@drawable/plus" />
 
 
 </RelativeLayout>
