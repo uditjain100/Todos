@@ -11,9 +11,9 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/Green"
+        android:background="@color/colorAccent"
         app:title="Todo"
-        app:titleTextColor="@color/White" />
+        app:titleTextColor="@color/colorPrimary" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_layout"

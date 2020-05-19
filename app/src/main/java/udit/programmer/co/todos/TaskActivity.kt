@@ -7,12 +7,13 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.DatePicker
-import android.widget.TimePicker
 import androidx.room.Room
 import kotlinx.android.synthetic.main.activity_task.*
-import java.sql.Time
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.time.Clock
 import java.util.*
 
 const val DB_NAME = "todo.db"
@@ -23,13 +24,11 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
     lateinit var timeSetListener: TimePickerDialog.OnTimeSetListener
     val db by lazy {
-        Room.databaseBuilder(
-            this,
-            AppDatabase::class.java,
-            DB_NAME
-        )
+        AppDatabase.getDataBase(this)
     }
-    val list = arrayOf("Bussiness", "Personal", "Insurance", "Shooping", "Banking")
+    val categories = arrayOf("Bussiness", "Personal", "Insurance", "Shooping", "Banking")
+    var finalDate = 0L
+    var finalTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,14 +36,15 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
 
         date_et.setOnClickListener(this)
         time_et.setOnClickListener(this)
+        save_btn.setOnClickListener(this)
 
         setUpSpinner()
     }
 
     private fun setUpSpinner() {
         val spin_adapter =
-            ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, list)
-        list.sort()
+            ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, categories)
+        categories.sort()
         spinner.adapter = spin_adapter
     }
 
@@ -56,6 +56,26 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
             R.id.time_et -> {
                 setTimeListener()
             }
+            R.id.save_btn -> {
+                saveTodo()
+            }
+        }
+    }
+
+    private fun saveTodo() {
+        val title = title_input.editText?.text.toString()
+        val category = spinner.selectedItem.toString()
+        val description = task_input.editText?.text.toString()
+
+        GlobalScope.launch(Dispatchers.Main) {
+            val id = withContext(Dispatchers.IO) {
+                return@withContext db.todoDao().insertTask(
+                    ToDoModel(
+                        title, description, category, finalDate, finalTime
+                    )
+                )
+            }
+            finish()
         }
     }
 
@@ -77,6 +97,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
     private fun UpdateTime() {
         val myFormat = "h:mm a"
         val sdf = SimpleDateFormat(myFormat)
+        finalDate = myCalender.time.time
         time_et.setText(sdf.format(myCalender.time))
     }
 
@@ -100,6 +121,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
     private fun UpdateDate() {
         val myFormat = "EEE, d MMM yyyy"
         val sdf = SimpleDateFormat(myFormat)
+        finalDate = myCalender.time.time
         date_et.setText(sdf.format(myCalender.time))
 
         time_input.visibility = View.VISIBLE
